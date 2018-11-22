@@ -16,6 +16,12 @@ func TestEvalIntegerExpression(t *testing.T) {
 		{"10", 10},
 		{"-5", -5},
 		{"-10", -10},
+		{"5 + 5 + 5 + 5 - 10", 10},
+		{"2 * 2 * 2 * 2 * 2", 32},
+		{"-50 + 100 + -50", 0},
+		{"5 * 2 + 10", 20},
+		{"5 + 2 * 10", 25},
+		{"3 * (2 + 3) - 10", 5},
 	}
 
 	for _, tt := range tests {
@@ -24,7 +30,7 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 }
 
-func TestEvalBooleanExpression(t *testing.T)  {
+func TestEvalBooleanExpression(t *testing.T) {
 	tests := []struct {
 		input    string
 		expected bool
@@ -43,7 +49,6 @@ func TestEvalBooleanExpression(t *testing.T)  {
 		testBooleanObject(t, evaluated, tt.expected)
 	}
 }
-
 
 func testEval(input string) object.Object {
 	l := lexer.New(input)
@@ -84,5 +89,3 @@ func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
 
 	return true
 }
-
-
