@@ -307,8 +307,8 @@ func TestOpertatorPrecedenceParsing(t *testing.T) {
 	}
 }
 
-func TestIfExpression(t *testing.T) {
-	input := `if (x < y) { x }`
+func TestIfElseExpression(t *testing.T) {
+	input := `if (x < y) { x } else { y }`
 
 	l := lexer.New(input)
 	p := New(l)
@@ -336,7 +336,7 @@ func TestIfExpression(t *testing.T) {
 	}
 
 	if len(exp.Consequence.Statements) != 1 {
-		t.Errorf("consequence is not 1 statements. got=%d\n", len(exp.Consequence.Statements))
+		t.Errorf("consequence is not %d statements. got=%d\n", 1, len(exp.Consequence.Statements))
 	}
 
 	consequence, ok := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
@@ -349,8 +349,17 @@ func TestIfExpression(t *testing.T) {
 		return
 	}
 
-	if exp.Alternative != nil {
-		t.Errorf("exp.Alternative.Statements was not nil. got=%v", exp.Alternative)
+	if len(exp.Alternative.Statements) != 1 {
+		t.Errorf("alternative is not %d statement. got=%d\n", 1, len(exp.Alternative.Statements))
+	}
+
+	alternative, ok := exp.Alternative.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T", exp.Alternative.Statements[0])
+	}
+
+	if !testIdentifier(t, alternative.Expression, "y") {
+		return
 	}
 }
 
