@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"go/types"
 	"monkey/lexer"
 	"monkey/object"
 	"monkey/parser"
@@ -292,8 +293,26 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`len("")`, 0},
 		{`len("four")`, 4},
 		{`len("hello world")`, 11},
+		{`len([1, 2])`, 2},
 		{`len(1)`, "argument to `len` not supported, got INTEGER"},
 		{`len("one", "two")`, "wrong number of arguments, got=2, want=1"},
+
+		{`first([1, 2])`, 1},
+		{`first([2, 1, 3])`, 2},
+		{`first([])`, nil},
+		{`first(2)`, "argument to `first` must be ARRAY, got INTEGER"},
+
+		{`last([2, 1])`, 1},
+		{`last([])`, nil},
+		{`last(2)`, "argument to `last` must be ARRAY, got INTEGER"},
+
+		{`reset([1, 2, 3])`, []int{2, 3}},
+		{`reset([2, 3])`, []int{3}},
+		{`reset([3])`, []int{}},
+		{`reset([])`, nil},
+
+		{`push([], 1)`, []int{1}},
+		{`push([1], 2)`, []int{1, 2}},
 	}
 
 	for _, tt := range tests {
@@ -301,6 +320,9 @@ func TestBuiltinFunctions(t *testing.T) {
 		switch expected := tt.expected.(type) {
 		case int:
 			testIntegerObject(t, evaluated, int64(expected))
+
+		case []int:
+			testArrayObject(t, evaluated, expected)
 		case string:
 			errorObj, ok := evaluated.(*object.Error)
 
@@ -312,6 +334,9 @@ func TestBuiltinFunctions(t *testing.T) {
 			if errorObj.Message != expected {
 				t.Errorf("wrong error message, expected=%q, got=%q", expected, errorObj.Message)
 			}
+
+		case types.Nil:
+			testNullObject(t, evaluated)
 		}
 	}
 }
@@ -426,4 +451,25 @@ func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
 
 func testNullObject(t *testing.T, obj object.Object) bool {
 	return obj == NULL
+}
+
+func testArrayObject(t *testing.T, obj object.Object, expected []int) bool {
+	array, ok := obj.(*object.Array)
+	if !ok {
+		t.Errorf("object is not Array. got=%T (%+v)", obj, obj)
+		return false
+	}
+
+	if len(array.Elements) != len(expected) {
+		t.Errorf("wrong number of array elements. want=%d, got=%d", len(expected), len(array.Elements))
+		return false
+	}
+
+	for idx, n := range expected {
+		if !testIntegerObject(t, array.Elements[idx], int64(n)) {
+			return false
+		}
+	}
+
+	return true
 }
